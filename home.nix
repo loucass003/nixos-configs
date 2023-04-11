@@ -1,11 +1,7 @@
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 let
-  screamOverride = pkgs.scream.override { pulseSupport = true; };
-  wrappedObs = pkgs.runCommand "obs-studio" { buildInputs = [ pkgs.makeWrapper ]; } ''
-    makeWrapper ${pkgs.obs-studio}/bin/obs $out/bin/obs \
-      --set QT_SCALE_FACTOR 1.2
-  '';
+
 in
 {
   nixpkgs.config.allowUnfree = true;
@@ -29,68 +25,72 @@ in
   home.packages = (with pkgs; [
     oh-my-zsh
     gnome.eog    # image viewer
-    evince # pdf reader
+    evince       # pdf reader
 
     # desktop look & feel
-    gnome.gnome-tweak-tool
+    gnome.gnome-tweaks
 
     # extensions
     gnomeExtensions.appindicator
     gnomeExtensions.dash-to-dock
     gnomeExtensions.caffeine
+    gnomeExtensions.screenshot-tool
+    gnomeExtensions.clipboard-indicator
+    gnomeExtensions.bluetooth-quick-connect
+    gnomeExtensions.refresh-wifi-connections
+    gnomeExtensions.sound-output-device-chooser
     
     xorg.libXxf86vm    
     libpulseaudio
-    minecraft
-    lutris
-    qlcplus
     postman
-    mongodb-compass
     filezilla
-    jetbrains.idea-community
     jetbrains.datagrip
-    gradleGen.gradle_4_10
     htop
     google-chrome
     firefox
+    openssl
     unrar
     unzip
     vscode
-    lm_sensors
     docker-compose
     usbutils
     pciutils
     pavucontrol
-    screamOverride
-    spice_gtk
-    transmission-qt
-    etcher
-    pulseeffects-legacy
-    winusb
-    blender
-    (makeDesktopItem {
-      name = "obs";
-      desktopName = "Obs Studio";
-      icon = "${obs-studio}/share/icons/hicolor/256x256/apps/com.obsproject.Studio.png";
-      exec = "${wrappedObs}/bin/obs";
-      categories = "System";
-    })
-    droidcam
+    gimp
+    spotify
+    discord
+    lutris
     gjs
+    heroku
+    (pkgs.writeShellScriptBin "upload-uat" ''
+        cp linkaband-front/dist linkaband-front/package.json linkaband-front/package-lock.json -r lkb-uat
+        rm -rf lkb-uat/dist/browser/stats-es2015.json lkb-uat/dist/browser/stats-es5.json 
+        cd lkb-uat
+        git add dist package.json package-lock.json
+        git commit -m "$1"
+        git push heroku master
+    '')
+    parsec-bin
+    dbeaver
+    mysql80
+    obs-studio
+    beekeeper-studio
+    gcc
+    gnumake
+    cargo
+    rustc
+    pkgconfig
+    steam
   ]);
 
+
+  programs.zellij = {
+    enable = true;
+  };
 
   programs.starship = {
     enable = true;
     enableZshIntegration = true;
-  };
-  
-  programs.obs-studio = {
-    enable = true;
-    package = wrappedObs;
-    plugins = [
-    ];
-
   };
 
 
@@ -105,7 +105,7 @@ in
       plugins = [ 
         "git"
         "python"
-        "man" 
+        "man"
       ];
     };
     plugins = [
@@ -132,7 +132,15 @@ in
     ];
     localVariables = {
       LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:$HOME/.nix-profile/lib";
+      EDITOR = "nvim";
     };
+  };
+
+  manual.manpages.enable = false;
+
+  programs.neovim = {
+    enable = true;
+    vimAlias = true;
   };
 
   
